@@ -16,12 +16,21 @@ import { findGround } from '../entities/mob-spawner';
 const { floor: fl, max: mx, min: mn, abs: ab, sqrt: sq, sin, cos, PI } = Math;
 var fpTimer = 0;
 
-function AABB(ax: number, ay: number, az: number, hw: number, hh: number): boolean {
-  for (var bx = fl(ax - hw); bx <= fl(ax + hw); bx++)
-    for (var by = fl(ay); by <= fl(ay + hh); by++)
-      for (var bz = fl(az - hw); bz <= fl(az + hw); bz++) {
-        var b = getBlock(bx, by, bz); if (b > 0 && !B[b].t && !B[b].nb) return true;
-      }
+var PW = 0.3;
+
+function isSolid(x: number, y: number, z: number): boolean {
+  var b = getBlock(x, y, z);
+  return b > 0 && !B[b].t && !B[b].nb;
+}
+
+function collides(ax: number, ay: number, az: number, hh: number): boolean {
+  var x0 = fl(ax - PW), x1 = fl(ax + PW);
+  var y0 = fl(ay), y1 = fl(ay + hh - 0.001);
+  var z0 = fl(az - PW), z1 = fl(az + PW);
+  for (var bx = x0; bx <= x1; bx++)
+    for (var by = y0; by <= y1; by++)
+      for (var bz = z0; bz <= z1; bz++)
+        if (isSolid(bx, by, bz)) return true;
   return false;
 }
 
@@ -41,16 +50,16 @@ export function updatePhysics(dt: number): void {
 
   if (P.fly) { P.x += dx * mv; P.z += dz * mv; }
   else {
-    var nx = P.x + dx * mv; if (!AABB(nx, P.y, P.z, .28, pHeight)) P.x = nx;
-    var nz = P.z + dz * mv; if (!AABB(P.x, P.y, nz, .28, pHeight)) P.z = nz;
+    var nx = P.x + dx * mv; if (!collides(nx, P.y, P.z, pHeight)) P.x = nx;
+    var nz = P.z + dz * mv; if (!collides(P.x, P.y, nz, pHeight)) P.z = nz;
   }
 
   // Knockback velocity
   if (P.vx || P.vz) {
     var kx = P.vx * dt, kz = P.vz * dt;
     if (!P.fly) {
-      var knx = P.x + kx; if (!AABB(knx, P.y, P.z, .28, pHeight)) P.x = knx; else P.vx = 0;
-      var knz = P.z + kz; if (!AABB(P.x, P.y, knz, .28, pHeight)) P.z = knz; else P.vz = 0;
+      var knx = P.x + kx; if (!collides(knx, P.y, P.z, pHeight)) P.x = knx; else P.vx = 0;
+      var knz = P.z + kz; if (!collides(P.x, P.y, knz, pHeight)) P.z = knz; else P.vz = 0;
     } else { P.x += kx; P.z += kz; }
     P.vx *= .88; P.vz *= .88;
     if (ab(P.vx) < .05) P.vx = 0; if (ab(P.vz) < .05) P.vz = 0;
@@ -67,10 +76,10 @@ export function updatePhysics(dt: number): void {
     var inW = getBlock(fl(P.x), fl(P.y + .8), fl(P.z)) === 120;
     if (inW) { P.vy = mx(P.vy, -2); if (keys['Space']) P.vy = 4; P.fallY = P.y; }
     var ny = P.y + P.vy * dt;
-    if (P.vy < 0 && AABB(P.x, ny, P.z, .28, .01)) {
+    if (P.vy < 0 && collides(P.x, ny, P.z, 0.01)) {
       if (!P.gnd) { var fd = P.fallY - P.y; if (fd > 3.5 && !inW) { var dmg = fl(fd - 3); hurtPlayer(dmg); showAlert('摔落伤害 -' + dmg); } }
       P.vy = 0; P.gnd = true; P.fallY = P.y;
-    } else if (P.vy > 0 && AABB(P.x, ny + pHeight, P.z, .28, .01)) { P.vy = 0; P.y = ny; }
+    } else if (P.vy > 0 && collides(P.x, ny + pHeight, P.z, 0.01)) { P.vy = 0; P.y = ny; }
     else { P.y = ny; P.gnd = false; }
   }
 
