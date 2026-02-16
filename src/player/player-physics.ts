@@ -105,10 +105,16 @@ export function updatePhysics(dt: number): void {
     if (inW) { P.vy = mx(P.vy, -2); if (keys['Space']) P.vy = 4; P.fallY = P.y; }
     var ny = P.y + P.vy * dt;
     if (P.vy < 0 && collides(P.x, ny, P.z, 0.01)) {
-      if (!P.gnd) { var fd = P.fallY - P.y; if (fd > 3.5 && !inW) { var dmg = fl(fd - 3); hurtPlayer(dmg); showAlert('摔落伤害 -' + dmg); } }
-      P.vy = 0; P.gnd = true; P.fallY = P.y;
-    } else if (P.vy > 0 && collides(P.x, ny + pHeight, P.z, 0.01)) { P.vy = 0; P.y = ny; }
-    else { P.y = ny; P.gnd = false; }
+      // Snap to top of the solid block
+      var snapY = fl(ny);
+      // Find the topmost solid block in the column at feet level
+      while (snapY < P.y + 1 && isSolid(fl(P.x), snapY, fl(P.z))) snapY++;
+      if (!P.gnd) { var fd = P.fallY - P.y; if (fd > 3.5 && !inW) { var dmg = fl(fd - 3); hurtPlayer(dmg); showAlert('\u6454\u843D\u4F24\u5BB3 -' + dmg); } }
+      P.y = snapY; P.vy = 0; P.gnd = true; P.fallY = P.y;
+    } else if (P.vy > 0 && collides(P.x, ny + pHeight, P.z, 0.01)) {
+      // Hit ceiling
+      P.vy = 0; P.y = fl(ny + pHeight) - pHeight;
+    } else { P.y = ny; P.gnd = false; }
   }
 
   P.x = mx(.5, mn(WS - .5, P.x)); P.z = mx(.5, mn(WS - .5, P.z));
