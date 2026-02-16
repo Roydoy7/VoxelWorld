@@ -16,6 +16,7 @@ import { findGround } from '../entities/mob-spawner';
 const { floor: fl, max: mx, min: mn, abs: ab, sqrt: sq, sin, cos, PI } = Math;
 var fpTimer = 0;
 
+// Player collision box: 0.6 wide (hw=0.3), 1.8 tall standing, 1.5 crouching
 var PW = 0.3;
 
 function isSolid(x: number, y: number, z: number): boolean {
@@ -38,7 +39,7 @@ export function updatePhysics(dt: number): void {
   if (P.dead) return;
   P.crouch = !P.fly && (keys['ShiftLeft'] || keys['ShiftRight']);
   var eyeH = P.crouch ? 1.32 : 1.62;
-  var pHeight = P.crouch ? 1.4 : 1.7;
+  var pHeight = P.crouch ? 1.5 : 1.8;
   var sp = P.crouch ? 2.2 : P.sprint ? 6.2 : 4.3; if (P.fly) sp = 12;
   var mv = dt * sp, sx2 = sin(P.ry), cx2 = cos(P.ry), dx = 0, dz = 0;
   if (keys['KeyW']) { dx -= sx2; dz -= cx2; }
