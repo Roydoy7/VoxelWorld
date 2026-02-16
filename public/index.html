@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>方块世界</title>
+<link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+<div id="load" style="display:none"><h1>⛏ 方块世界</h1><div id="lbar"><div id="lfill"></div></div><div id="ltxt">初始化...</div></div>
+<div id="cross"></div><div id="ui"></div><div id="hp"></div><div id="hunger"></div>
+<div id="xpbar"><div id="xpfill"></div></div><div id="xplvl"></div>
+<div id="bar"></div><div id="dmg"></div><div id="alert2"></div><div id="weather"></div>
+<div id="help">WASD移动 空格跳 Ctrl冲刺 Shift蹲<br>左键挖/攻 右键放/互动 滚轮/1-9选<br>E背包(2x2合成) 右键工作台(3x3)<br>F3调试 F4视角 Q丢弃</div>
+<div id="die"><h2>你死了！</h2><button id="respawn-btn">重生</button></div>
+<div id="inv"><div id="ipanel"><div id="ileft"><div style="color:#fff;font-size:14px;margin-bottom:4px">🎒 背包</div><div id="igrid"></div></div><div id="iright"><div style="color:#fff;font-size:12px">⚒ 合成</div><div id="icraft"></div><div style="color:#fff;font-size:18px">↓</div><div id="icout"></div></div></div></div>
+<div id="craft"><div id="cpanel"><div><div style="color:#fff;font-size:13px;margin-bottom:6px">⚒ 合成</div><div id="cgrid"></div></div><div style="color:#fff;font-size:24px">→</div><div id="cout"></div></div></div>
+<div id="modesel"></div>
+<script type="module" src="../dist/main.js"></script>
+</body>
+</html>

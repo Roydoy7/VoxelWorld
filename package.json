@@ -1,0 +1,20 @@
+{
+  "name": "voxelworld",
+  "version": "1.0.0",
+  "description": "方块世界 - A Minecraft-like voxel game",
+  "type": "module",
+  "scripts": {
+    "dev": "bun build src/main.ts --outdir dist --watch",
+    "build": "bun build src/main.ts --outdir dist --minify",
+    "typecheck": "tsc --noEmit",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "three": "^0.128.0"
+  },
+  "devDependencies": {
+    "@types/three": "^0.128.0",
+    "bun-types": "latest",
+    "typescript": "^5.4.0"
+  }
+}
