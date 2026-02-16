@@ -18,6 +18,7 @@ var fpTimer = 0;
 
 // Player collision box: 0.6 wide (hw=0.3), 1.8 tall standing, 1.5 crouching
 var PW = 0.3;
+var STEP_H = 0.6;
 
 function isSolid(x: number, y: number, z: number): boolean {
   var b = getBlock(x, y, z);
@@ -51,8 +52,34 @@ export function updatePhysics(dt: number): void {
 
   if (P.fly) { P.x += dx * mv; P.z += dz * mv; }
   else {
-    var nx = P.x + dx * mv; if (!collides(nx, P.y, P.z, pHeight)) P.x = nx;
-    var nz = P.z + dz * mv; if (!collides(P.x, P.y, nz, pHeight)) P.z = nz;
+    var nx = P.x + dx * mv;
+    var nz = P.z + dz * mv;
+    // Try move X
+    if (!collides(nx, P.y, P.z, pHeight)) {
+      P.x = nx;
+    } else if (P.gnd && !collides(nx, P.y + STEP_H, P.z, pHeight)) {
+      // Step-up: find exact height
+      P.x = nx;
+      for (var sy = 1; sy <= 6; sy++) {
+        if (!collides(nx, P.y + sy * 0.1, P.z, pHeight)) { P.y = P.y + sy * 0.1; break; }
+      }
+    } else {
+      // Push to block edge
+      if (dx > 0) P.x = fl(nx + PW) - PW - 0.001;
+      else if (dx < 0) P.x = fl(nx - PW) + 1 + PW + 0.001;
+    }
+    // Try move Z
+    if (!collides(P.x, P.y, nz, pHeight)) {
+      P.z = nz;
+    } else if (P.gnd && !collides(P.x, P.y + STEP_H, nz, pHeight)) {
+      P.z = nz;
+      for (var sz = 1; sz <= 6; sz++) {
+        if (!collides(P.x, P.y + sz * 0.1, nz, pHeight)) { P.y = P.y + sz * 0.1; break; }
+      }
+    } else {
+      if (dz > 0) P.z = fl(nz + PW) - PW - 0.001;
+      else if (dz < 0) P.z = fl(nz - PW) + 1 + PW + 0.001;
+    }
   }
 
   // Knockback velocity
