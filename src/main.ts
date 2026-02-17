@@ -25,6 +25,8 @@ import { spawnDrop } from './entities/drops';
 import { resetChunks } from './world/chunk-storage';
 import { setSeed } from './core/noise';
 import { saveWorld, loadWorld, openDB } from './world/world-save';
+import { preloadSounds } from './audio/audio-manager';
+import { preloadMobSounds } from './audio/mob-sounds';
 
 const { floor: fl, min: mn } = Math;
 
@@ -165,6 +167,8 @@ async function startGame(worldId: string, isNew: boolean, mode?: number, seed?: 
   }
 
   currentWorldId = worldId;
+  preloadSounds();
+  preloadMobSounds();
 
   if (isNew) {
     applyGameMode(mode || 0);

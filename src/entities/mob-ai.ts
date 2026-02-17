@@ -9,6 +9,7 @@ import { spawnDrop } from './drops';
 import { updateMobHPBar } from './mob-health';
 import { mobs, mobGroup, findGround } from './mob-spawner';
 import { showAlert } from '../ui/dom-helpers';
+import { playMobIdle, playMobHurt, playMobDeath } from '../audio/mob-sounds';
 import type { MobInstance } from '../types/mobs';
 
 const { max: mx, min: mn, abs: ab, sqrt: sq, sin, cos, random: rn, PI, atan2 } = Math;
@@ -19,6 +20,14 @@ export function updateMobs(dt: number): void {
     if (m.dead) { m.dt -= dt; m.mesh.rotation.z += dt * 4; m.mesh.position.y -= dt * 2.5; if (m.dt <= 0) { mobGroup.remove(m.mesh); mobs.splice(i, 1); } continue; }
     var t = MOB_TYPES[m.type], ddx = P.x - m.x, ddz = P.z - m.z, dist = sq(ddx * ddx + ddz * ddz);
     var agg = dist < t.ag && !P.dead && !t.passive;
+
+    // Ambient idle sounds
+    if (!m.sndT) m.sndT = 3 + rn() * 5;
+    m.sndT -= dt;
+    if (m.sndT <= 0) {
+      m.sndT = 4 + rn() * 8;
+      playMobIdle(m.type, m.x, m.y, m.z);
+    }
 
     // Passive flee
     if (t.passive && m.flee > 0) {
@@ -81,7 +90,10 @@ export function hitMob(mob: MobInstance, dm: number): void {
   if (kbl > .1) { mob.x += kbx / kbl * .5; mob.z += kbz / kbl * .5; }
   if (mob.hp <= 0) {
     mob.dead = 1; mob.dt = .6; showAlert(t.n + ' 被击杀！');
+    playMobDeath(mob.type, mob.x, mob.y, mob.z);
     addXP(t.passive ? 1 : 5);
     if (t.drop) { for (var di = 0; di < t.drop.length; di++) { var dr = t.drop[di]; if (dr[0]) spawnDrop(mob.x, mob.y + .5, mob.z, dr[0], dr[1]); } }
+  } else {
+    playMobHurt(mob.type, mob.x, mob.y, mob.z);
   }
 }

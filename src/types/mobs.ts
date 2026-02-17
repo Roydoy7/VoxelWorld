@@ -37,6 +37,7 @@ export interface MobInstance {
   dead: number;   // is dead
   dt: number;     // death timer
   flee: number;   // flee timer
+  sndT?: number;  // sound timer
   hpBar?: MobHealthBar;
 }
 
