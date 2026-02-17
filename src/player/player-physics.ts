@@ -15,6 +15,7 @@ import { findGround } from '../entities/mob-spawner';
 
 const { floor: fl, max: mx, min: mn, abs: ab, sqrt: sq, sin, cos, PI } = Math;
 var fpTimer = 0;
+var _dT = 0; // debug throttle
 
 // Player collision box: 0.6 wide (hw=0.3), 1.8 tall standing, 1.5 crouching
 var PW = 0.3;
@@ -58,13 +59,14 @@ export function updatePhysics(dt: number): void {
     if (!collides(nx, P.y, P.z, pHeight)) {
       P.x = nx;
     } else if (P.gnd && !collides(nx, P.y + STEP_H, P.z, pHeight)) {
-      // Step-up: find exact height
+      if (_dT <= 0) console.log('[X step-up] nx='+nx.toFixed(2)+' y='+P.y.toFixed(2));
       P.x = nx;
       for (var sy = 1; sy <= 6; sy++) {
         if (!collides(nx, P.y + sy * 0.1, P.z, pHeight)) { P.y = P.y + sy * 0.1; break; }
       }
     } else {
       // Push to block edge
+      if (_dT <= 0 && (dx !== 0)) console.log('[X blocked] pos=('+P.x.toFixed(2)+','+P.y.toFixed(2)+','+P.z.toFixed(2)+') nx='+nx.toFixed(2)+' dx='+dx.toFixed(3)+' pHeight='+pHeight);
       if (dx > 0) P.x = fl(nx + PW) - PW - 0.001;
       else if (dx < 0) P.x = fl(nx - PW) + 1 + PW + 0.001;
     }
@@ -72,11 +74,13 @@ export function updatePhysics(dt: number): void {
     if (!collides(P.x, P.y, nz, pHeight)) {
       P.z = nz;
     } else if (P.gnd && !collides(P.x, P.y + STEP_H, nz, pHeight)) {
+      if (_dT <= 0) console.log('[Z step-up] nz='+nz.toFixed(2)+' y='+P.y.toFixed(2));
       P.z = nz;
       for (var sz = 1; sz <= 6; sz++) {
         if (!collides(P.x, P.y + sz * 0.1, nz, pHeight)) { P.y = P.y + sz * 0.1; break; }
       }
     } else {
+      if (_dT <= 0 && (dz !== 0)) console.log('[Z blocked] pos=('+P.x.toFixed(2)+','+P.y.toFixed(2)+','+P.z.toFixed(2)+') nz='+nz.toFixed(2)+' dz='+dz.toFixed(3)+' pHeight='+pHeight);
       if (dz > 0) P.z = fl(nz + PW) - PW - 0.001;
       else if (dz < 0) P.z = fl(nz - PW) + 1 + PW + 0.001;
     }
@@ -110,12 +114,14 @@ export function updatePhysics(dt: number): void {
         // Center hit - normal ground snap
         var snapY = fl(ny);
         while (snapY < P.y + 1 && isSolid(fl(P.x), snapY, fl(P.z))) snapY++;
+        if (_dT <= 0) console.log('[GND center] pos=('+P.x.toFixed(2)+','+P.y.toFixed(2)+','+P.z.toFixed(2)+') ny='+ny.toFixed(2)+' snapY='+snapY);
         if (!P.gnd) { var fd = P.fallY - P.y; if (fd > 3.5 && !inW) { var dmg = fl(fd - 3); hurtPlayer(dmg); showAlert('\u6454\u843D\u4F24\u5BB3 -' + dmg); } }
         P.y = snapY; P.vy = 0; P.gnd = true; P.fallY = P.y;
       } else {
         // Edge hit only - land if the player can actually stand here
         var edgeSnap = fl(ny) + 1;
         var canStand = !collides(P.x, edgeSnap, P.z, pHeight);
+        if (_dT <= 0) console.log('[GND edge] pos=('+P.x.toFixed(2)+','+P.y.toFixed(2)+','+P.z.toFixed(2)+') ny='+ny.toFixed(2)+' edgeSnap='+edgeSnap+' canStand='+canStand);
         if (canStand) {
           if (!P.gnd) { var fd = P.fallY - edgeSnap; if (fd > 3.5 && !inW) { var dmg = fl(fd - 3); hurtPlayer(dmg); showAlert('\u6454\u843D\u4F24\u5BB3 -' + dmg); } }
           P.y = edgeSnap; P.vy = 0; P.gnd = true; P.fallY = P.y;
@@ -208,4 +214,5 @@ export function updatePhysics(dt: number): void {
     );
     fpHand.rotation.set(-P.rx - 0.4 - fpSwingAng + idleR, P.ry + PI, idleR * .5, 'YXZ');
   } else { fpHand.visible = false; }
+  _dT -= dt; if (_dT <= 0) _dT = 0.2; // log every 0.2s
 }
