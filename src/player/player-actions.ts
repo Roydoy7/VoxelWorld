@@ -8,6 +8,7 @@ import { P, swingT, swingDur, setSwingT } from './player-state';
 import { addXP, eat } from './player-stats';
 import { spawnDrop } from '../entities/drops';
 import { spawnBreakParticles } from '../effects/particles';
+import { playDig, playBreak, playPlace, playHit, playEat } from '../audio/audio-manager';
 import { hitMob } from '../entities/mob-ai';
 import { mobs } from '../entities/mob-spawner';
 import { crackBox, crackMats } from '../effects/crack-overlay';
@@ -52,11 +53,12 @@ export function updateActions(dt: number): void {
     if (mouseButton === 1) {
       if (P.gm === 1) {
         setMouseButton(0); setSwingT(swingDur);
+        playBreak(hit.id);
         spawnBreakParticles(hit.x, hit.y, hit.z, hit.id);
         setBlock(hit.x, hit.y, hit.z, 0); rebuildNear(hit.x, hit.z);
       } else {
         if (!P.mineB || P.mineB.x !== hit.x || P.mineB.y !== hit.y || P.mineB.z !== hit.z) { P.mineT = 0; P.mineB = { x: hit.x, y: hit.y, z: hit.z }; }
-        if (swingT <= 0) setSwingT(swingDur);
+        if (swingT <= 0) { setSwingT(swingDur); playDig(); }
         var tl = P.hb[P.sel] ? P.hb[P.sel]!.id : 0;
         var toolLv = B[tl] ? B[tl].tool : 0;
         var spd = getBreakTime(hit.id, toolLv);
@@ -66,6 +68,7 @@ export function updateActions(dt: number): void {
         crackBox.position.set(hit.x + .5, hit.y + .5, hit.z + .5); crackBox.visible = true;
         if (P.mineT >= spd) {
           P.mineT = 0; crackBox.visible = false;
+          playBreak(hit.id);
           spawnBreakParticles(hit.x, hit.y, hit.z, hit.id);
           var dropId = BLOCK_DROPS[hit.id] !== undefined ? BLOCK_DROPS[hit.id] : hit.id;
           if (dropId > 0) spawnDrop(hit.x + .5, hit.y + .5, hit.z + .5, dropId, 1);
@@ -82,13 +85,13 @@ export function updateActions(dt: number): void {
       var it = P.hb[P.sel];
       if (it && B[it.id] && !B[it.id].nb && !B[it.id].food) {
         if (!(fl(P.x) === px2 && (fl(P.y) === py2 || fl(P.y + 1) === py2) && fl(P.z) === pz2)) {
-          setBlock(px2, py2, pz2, it.id); rebuildNear(px2, pz2);
+          setBlock(px2, py2, pz2, it.id); rebuildNear(px2, pz2); playPlace(it.id);
           if (P.gm !== 1) { it.q--; if (it.q <= 0) P.hb[P.sel] = null; }
           updateHotbar();
         }
       }
       if (it && B[it.id] && B[it.id].food > 0 && P.hunger < 20) {
-        eat(B[it.id].food);
+        eat(B[it.id].food); playEat();
         if (P.gm !== 1) { it.q--; if (it.q <= 0) P.hb[P.sel] = null; }
         updateHotbar();
       }
@@ -106,7 +109,7 @@ export function updateActions(dt: number): void {
       if (md < 3) {
         var toM = Math.atan2(-(m.x - P.x), -(m.z - P.z));
         var ang = ab(((toM - P.ry) % (PI * 2) + PI * 3) % (PI * 2) - PI);
-        if (ang < PI / 3) { hitMob(m, aDmg); atkCD = .4; setSwingT(swingDur); break; }
+        if (ang < PI / 3) { hitMob(m, aDmg); atkCD = .4; setSwingT(swingDur); playHit(); break; }
       }
     }
   }

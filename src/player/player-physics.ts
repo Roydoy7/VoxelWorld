@@ -10,6 +10,7 @@ import {
   fpHand, fpSwingAng, setFpSwingAng
 } from './player-model';
 import { hurtPlayer } from './player-stats';
+import { playStep, playFall } from '../audio/audio-manager';
 import { showAlert } from '../ui/dom-helpers';
 import { findGround } from '../entities/mob-spawner';
 
@@ -115,7 +116,7 @@ export function updatePhysics(dt: number): void {
         var snapY = fl(ny);
         while (snapY < P.y + 1 && isSolid(fl(P.x), snapY, fl(P.z))) snapY++;
         if (_dT <= 0) console.log('[GND center] pos=('+P.x.toFixed(2)+','+P.y.toFixed(2)+','+P.z.toFixed(2)+') ny='+ny.toFixed(2)+' snapY='+snapY);
-        if (!P.gnd) { var fd = P.fallY - P.y; if (fd > 3.5 && !inW) { var dmg = fl(fd - 3); hurtPlayer(dmg); showAlert('\u6454\u843D\u4F24\u5BB3 -' + dmg); } }
+        if (!P.gnd) { var fd = P.fallY - P.y; if (fd > 3.5 && !inW) { var dmg = fl(fd - 3); hurtPlayer(dmg); showAlert('\u6454\u843D\u4F24\u5BB3 -' + dmg); playFall(); } }
         P.y = snapY; P.vy = 0; P.gnd = true; P.fallY = P.y;
       } else {
         // Edge hit only - land if the player can actually stand here
@@ -123,7 +124,7 @@ export function updatePhysics(dt: number): void {
         var canStand = !collides(P.x, edgeSnap, P.z, pHeight);
         if (_dT <= 0) console.log('[GND edge] pos=('+P.x.toFixed(2)+','+P.y.toFixed(2)+','+P.z.toFixed(2)+') ny='+ny.toFixed(2)+' edgeSnap='+edgeSnap+' canStand='+canStand);
         if (canStand) {
-          if (!P.gnd) { var fd = P.fallY - edgeSnap; if (fd > 3.5 && !inW) { var dmg = fl(fd - 3); hurtPlayer(dmg); showAlert('\u6454\u843D\u4F24\u5BB3 -' + dmg); } }
+          if (!P.gnd) { var fd = P.fallY - edgeSnap; if (fd > 3.5 && !inW) { var dmg = fl(fd - 3); hurtPlayer(dmg); showAlert('\u6454\u843D\u4F24\u5BB3 -' + dmg); playFall(); } }
           P.y = edgeSnap; P.vy = 0; P.gnd = true; P.fallY = P.y;
         } else {
           // Can't stand here (would embed in adjacent block) - keep falling
@@ -141,7 +142,16 @@ export function updatePhysics(dt: number): void {
 
   // Walk animation
   var moving = len > .01 && P.gnd;
-  if (moving) P.wa += dt * (P.sprint ? 8 : 5); else P.wa *= .85;
+  if (moving) {
+    var prevWa = P.wa;
+    P.wa += dt * (P.sprint ? 8 : 5);
+    // Play footstep at regular intervals (~0.3s walk, ~0.19s sprint)
+    var SI = 1.5;
+    if (fl(P.wa / SI) !== fl(prevWa / SI)) {
+      var blockBelow = getBlock(fl(P.x), fl(P.y - 0.1), fl(P.z));
+      playStep(blockBelow);
+    }
+  } else P.wa *= .85;
 
   // Camera
   if (P.viewMode === 0) {

@@ -1,5 +1,6 @@
 import { WORLD_SIZE as WS } from '../constants';
 import { P } from './player-state';
+import { playHurt, playLevelUp } from '../audio/audio-manager';
 import { $, showAlert } from '../ui/dom-helpers';
 import { renderer } from '../rendering/scene-setup';
 import { findGround } from '../entities/mob-spawner';
@@ -24,7 +25,7 @@ export function updateXP(): void {
 
 export function addXP(n: number): void {
   P.xp += n;
-  while (P.xp >= P.xpNext) { P.xp -= P.xpNext; P.level++; P.xpNext = fl(7 + P.level * 2.5); showAlert('升级！等级 ' + P.level); }
+  while (P.xp >= P.xpNext) { P.xp -= P.xpNext; P.level++; P.xpNext = fl(7 + P.level * 2.5); showAlert('升级！等级 ' + P.level); playLevelUp(); }
   updateXP();
 }
 
@@ -35,7 +36,7 @@ function dmgFlash(): void {
 
 export function hurtPlayer(n: number, src?: string, kbx?: number, kbz?: number): void {
   if (P.dead || P.gm === 1) return;
-  P.hp = mx(0, P.hp - n); updateHP(); dmgFlash();
+  P.hp = mx(0, P.hp - n); updateHP(); dmgFlash(); playHurt();
   if (src) showAlert(src + ' -' + n);
   if (kbx !== undefined && kbz !== undefined) {
     var kbl = sq(kbx * kbx + kbz * kbz);
