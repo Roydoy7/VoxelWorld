@@ -12,6 +12,9 @@ const MIME: Record<string, string> = {
   '.json': 'application/json',
   '.woff': 'font/woff',
   '.woff2': 'font/woff2',
+  '.ogg': 'audio/ogg',
+  '.mp3': 'audio/mpeg',
+  '.wav': 'audio/wav',
 };
 
 const ROOT = import.meta.dir;
